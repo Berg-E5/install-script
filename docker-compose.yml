@@ -69,7 +69,6 @@ services:
     volumes:
       - "/tpdata/trojan-panel-core/bin/xray/config/:/tpdata/trojan-panel-core/bin/xray/config/"
       - "/tpdata/trojan-panel-core/bin/trojango/config/:/tpdata/trojan-panel-core/bin/trojango/config/"
-      - "/tpdata/trojan-panel-core/bin/hysteria/config/:/tpdata/trojan-panel-core/bin/hysteria/config/"
       - "/tpdata/trojan-panel-core/bin/naiveproxy/config/:/tpdata/trojan-panel-core/bin/naiveproxy/config/"
       - "/tpdata/trojan-panel-core/bin/hysteria2/config/:/tpdata/trojan-panel-core/bin/hysteria2/config/"
       - "/tpdata/trojan-panel-core/logs/:/tpdata/trojan-panel-core/logs/"

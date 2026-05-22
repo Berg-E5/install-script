@@ -51,14 +51,13 @@ init_var() {
   trojan_pas=""
   remote_addr="127.0.0.1"
 
-  # Hysteria
-  HYSTERIA_DATA="/tpdata/hysteria/"
-  HYSTERIA_STANDALONE_CONFIG="/tpdata/hysteria/standalone_config.json"
-  hysteria_port=443
-  hysteria_password=""
-  hysteria_protocol="udp"
-  hysteria_up_mbps=100
-  hysteria_down_mbps=100
+  # Hysteria2
+  HYSTERIA2_DATA="/tpdata/hysteria2/"
+  HYSTERIA2_STANDALONE_CONFIG="/tpdata/hysteria2/config.json"
+  hysteria2_port=443
+  hysteria2_password=""
+  hysteria2_up_mbps=100
+  hysteria2_down_mbps=100
 
   # NaiveProxy
   NAIVEPROXY_DATA="/tpdata/naiveproxy/"
@@ -114,9 +113,9 @@ mkdir_tools() {
   mkdir -p ${TROJANGO_DATA}
   touch ${TROJANGO_STANDALONE_CONFIG}
 
-  # Hysteria
-  mkdir -p ${HYSTERIA_DATA}
-  touch ${HYSTERIA_STANDALONE_CONFIG}
+  # Hysteria2
+  mkdir -p ${HYSTERIA2_DATA}
+  touch ${HYSTERIA2_STANDALONE_CONFIG}
 
   # NaiveProxy
   mkdir -p ${NAIVEPROXY_DATA}
@@ -620,78 +619,69 @@ EOF
 }
 
 # Install Hysteria
-install_hysteria_standalone() {
-  if [[ -z $(docker ps -a -q -f "name=^trojan-panel-hysteria-standalone$") ]]; then
-    echo_content green "---> Install Hysteria"
+install_hysteria2_standalone() {
+  if [[ -z $(docker ps -a -q -f "name=^trojan-panel-hysteria2-standalone$") ]]; then
+    echo_content green "---> Install Hysteria2"
 
-    echo_content skyBlue "Hysteria's schema is as follows:"
-    echo_content yellow "1. udp(default)"
-    echo_content yellow "2. faketcp"
-    read -r -p "Please enter the mode of Hysteria (default: 1): " selectProtocolType
-    [[ -z "${selectProtocolType}" ]] && selectProtocolType=1
-    case ${selectProtocolType} in
-    1)
-      hysteria_protocol="udp"
-      ;;
-    2)
-      hysteria_protocol="faketcp"
-      ;;
-    *)
-      hysteria_protocol="udp"
-      ;;
-    esac
-    read -r -p "Please enter the port of Hysteria (default: 443): " hysteria_port
-    [[ -z ${hysteria_port} ]] && hysteria_port=443
-    read -r -p "Please enter the maximum upload speed of a single client/Mbps (default: 100): " hysteria_up_mbps
-    [[ -z "${hysteria_up_mbps}" ]] && hysteria_up_mbps=100
-    read -r -p "Please enter the maximum download speed of a single client/Mbps (default: 100): " hysteria_down_mbps
-    [[ -z "${hysteria_down_mbps}" ]] && hysteria_down_mbps=100
-    while read -r -p "Please enter the password of Hysteria (required): " hysteria_password; do
-      if [[ -z ${hysteria_password} ]]; then
+    read -r -p "Please enter the port of Hysteria2 (default: 443): " hysteria2_port
+    [[ -z "${hysteria2_port}" ]] && hysteria2_port=443
+    read -r -p "Please enter the maximum upload speed of a single client/Mbps (default: 100): " hysteria2_up_mbps
+    [[ -z "${hysteria2_up_mbps}" ]] && hysteria2_up_mbps=100
+    read -r -p "Please enter the maximum download speed of a single client/Mbps (default: 100): " hysteria2_down_mbps
+    [[ -z "${hysteria2_down_mbps}" ]] && hysteria2_down_mbps=100
+    while read -r -p "Please enter the password of Hysteria2 (required): " hysteria2_password; do
+      if [[ -z "${hysteria2_password}" ]]; then
         echo_content red "Password can not be empty"
       else
         break
       fi
     done
 
-    cat >${HYSTERIA_STANDALONE_CONFIG} <<EOF
+    domain=$(cat "${DOMAIN_FILE}")
+    cat >${HYSTERIA2_STANDALONE_CONFIG} <<EOF
 {
-  "listen": ":${hysteria_port}",
-  "protocol": "${hysteria_protocol}",
-  "cert": "${CERT_PATH}${domain}.crt",
-  "key": "${CERT_PATH}${domain}.key",
-  "up_mbps": ${hysteria_up_mbps},
-  "down_mbps": ${hysteria_down_mbps},
-  "auth_str": "${hysteria_password}"
+  "server": ":${hysteria2_port}",
+  "tls": {
+    "cert": "${CERT_PATH}${domain}.crt",
+    "key": "${CERT_PATH}${domain}.key"
+  },
+  "auth": {
+    "password": "${hysteria2_password}"
+  },
+  "bandwidth": {
+    "up": ${hysteria2_up_mbps},
+    "down": ${hysteria2_down_mbps}
+  }
 }
 EOF
 
-    docker pull tobyxdd/hysteria &&
-      docker run -d --name trojan-panel-hysteria-standalone --restart=always \
+    docker pull tobyxdd/hysteria2 &&
+      docker run -d --name trojan-panel-hysteria2-standalone --restart=always \
         --network=host \
-        -v ${HYSTERIA_STANDALONE_CONFIG}:/etc/hysteria.json \
+        -v ${HYSTERIA2_STANDALONE_CONFIG}:/etc/hysteria2/config.json \
         -v ${CERT_PATH}:${CERT_PATH} \
-        tobyxdd/hysteria -c /etc/hysteria.json server
+        tobyxdd/hysteria2 server
 
-    if [[ -n $(docker ps -q -f "name=^trojan-panel-hysteria-standalone$" -f "status=running") ]]; then
-      echo_content skyBlue "---> Hysteria installation completed"
+    if [[ -n $(docker ps -q -f "name=^trojan-panel-hysteria2-standalone$" -f "status=running") ]]; then
+      echo_content skyBlue "---> Hysteria2 installation completed"
       echo_content red "\n=============================================================="
-      echo_content skyBlue "Hysteria installed successfully"
+      echo_content skyBlue "Hysteria2 installed successfully"
       echo_content yellow "domain: ${domain}"
-      echo_content yellow "Port of Hysteria: ${hysteria_port}"
-      echo_content yellow "Password for Hysteria: ${hysteria_password}"
+      echo_content yellow "Port of Hysteria2: ${hysteria2_port}"
+      echo_content yellow "Password for Hysteria2: ${hysteria2_password}"
+      echo_content yellow "Upload Bandwidth: ${hysteria2_up_mbps} Mbps"
+      echo_content yellow "Download Bandwidth: ${hysteria2_down_mbps} Mbps"
       echo_content yellow "Certificate Directory: ${CERT_PATH}"
       echo_content red "\n=============================================================="
     else
-      echo_content red "---> Hysteria installation fails or runs abnormally, please try to repair or uninstall and reinstall"
+      echo_content red "---> Hysteria2 installation fails or runs abnormally, please try to repair or uninstall and reinstall"
       exit 0
     fi
   else
-    echo_content skyBlue "---> You have installed Hysteria"
+    echo_content skyBlue "---> You have installed Hysteria2"
   fi
 }
 
-# Install NaiveProxy (Caddy+ForwardProxy)
 install_navieproxy_standalone() {
   if [[ -z $(docker ps -a -q -f "name=^trojan-panel-navieproxy-standalone$") ]]; then
     echo_content green "---> Install NaiveProxy (Caddy+ForwardProxy)"
@@ -866,13 +856,13 @@ uninstall_trojanGO_standalone() {
 }
 
 # Uninstall Hysteria
-uninstall_hysteria_standalone() {
-  if [[ -n $(docker ps -a -q -f "name=^trojan-panel-hysteria-standalone$") ]]; then
+uninstall_hysteria2_standalone() {
+  if [[ -n $(docker ps -a -q -f "name=^trojan-panel-hysteria2-standalone$") ]]; then
     echo_content green "---> Uninstall Hysteria"
 
-    docker rm -f trojan-panel-hysteria-standalone &&
+    docker rm -f trojan-panel-hysteria2-standalone &&
       docker rmi -f tobyxdd/hysteria &&
-      rm -f ${HYSTERIA_STANDALONE_CONFIG}
+      rm -f ${HYSTERIA2_STANDALONE_CONFIG}
 
     echo_content skyBlue "---> Hysteria uninstallation completed"
   else
@@ -929,7 +919,7 @@ failure_testing() {
     if [[ -n $(docker ps -a -q -f "name=^trojan-panel-trojanGO-standalone$") && -z $(docker ps -q -f "name=^trojan-panel-trojanGO-standalone$" -f "status=running") ]]; then
       echo_content red "---> TrojanGO is running abnormally"
     fi
-    if [[ -n $(docker ps -a -q -f "name=^trojan-panel-hysteria-standalone$") && -z $(docker ps -q -f "name=^trojan-panel-hysteria-standalone$" -f "status=running") ]]; then
+    if [[ -n $(docker ps -a -q -f "name=^trojan-panel-hysteria2-standalone$") && -z $(docker ps -q -f "name=^trojan-panel-hysteria2-standalone$" -f "status=running") ]]; then
       echo_content red "---> Hysteria is running abnormally"
     fi
     if [[ -n $(docker ps -a -q -f "name=^trojan-panel-navieproxy-standalone$") && -z $(docker ps -q -f "name=^trojan-panel-navieproxy-standalone$" -f "status=running") ]]; then
@@ -975,7 +965,7 @@ main() {
   2)
     install_docker
     install_caddy2
-    install_hysteria_standalone
+    install_hysteria2_standalone
     ;;
   3)
     install_docker
@@ -990,7 +980,7 @@ main() {
     uninstall_trojanGO_standalone
     ;;
   6)
-    uninstall_hysteria_standalone
+    uninstall_hysteria2_standalone
     ;;
   7)
     uninstall_navieproxy_standalone
