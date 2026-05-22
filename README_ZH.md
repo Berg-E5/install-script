@@ -45,6 +45,19 @@ CPU: linux/amd64 / linux/arm/v6 / linux/arm/v7 / linux/arm64 / linux/s390x / lin
     source <(curl -L https://github.com/trojanpanel/install-script/raw/main/install_script_standalone.sh)
     ```
 
+- Docker Compose（使用你自己的镜像快速启动）
+
+    ```shell
+    # 设置凭证
+    export mariadb_pas="YourStrongPassword"
+    export redis_pass="YourStrongPassword"
+    export domain="your-domain.com"
+    export VERSION="latest"
+
+    # 启动所有服务
+    docker compose up -d
+    ```
+
 - [安装旧版本](README_ARCHIVE_ZH.md)
 
 ## 其他

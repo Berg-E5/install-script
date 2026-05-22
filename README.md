@@ -49,6 +49,19 @@ Memory: ≥ 1G
     source <(curl -L https://github.com/trojanpanel/install-script/raw/main/install_script_standalone.sh)
     ```
 
+- Docker Compose (quick start with your own images)
+
+    ```shell
+    # Set your credentials
+    export mariadb_pas="YourStrongPassword"
+    export redis_pass="YourStrongPassword"
+    export domain="your-domain.com"
+    export VERSION="latest"
+
+    # Start all services
+    docker compose up -d
+    ```
+
 - [Install old version](README_ARCHIVE.md)
 
 ## Other
